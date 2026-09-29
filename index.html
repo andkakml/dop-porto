@@ -1609,174 +1609,144 @@
     </footer>
 
     <script>
-        // Hamburger navigation
-        const menuToggle = document.getElementById('menuToggle');
-        const mobileNav = document.getElementById('mobileNav');
-        const mobileNavLinks = mobileNav.querySelectorAll('a');
+    // 3D Photography Gallery
+    const photoGallery = document.getElementById('photo3dGallery');
+    const photoStage = document.getElementById('photo3dStage');
+    const photoCards = Array.from(document.querySelectorAll('.photo-3d-card'));
+    const photoPrev = document.getElementById('photoPrev');
+    const photoNext = document.getElementById('photoNext');
+    const photoCounter = document.getElementById('photoCounter');
 
-        function closeMobileMenu() {
-            mobileNav.classList.remove('open');
-            menuToggle.classList.remove('active');
-            menuToggle.setAttribute('aria-expanded', 'false');
-            menuToggle.setAttribute('aria-label', 'Buka menu navigasi');
+    if (photoGallery && photoStage && photoCards.length) {
+        let currentPhoto = 0;
+        let dragStartX = 0;
+        let dragDeltaX = 0;
+        let isDragging = false;
+
+        function wrapOffset(index, current, total) {
+            let offset = index - current;
+            if (offset > total / 2) offset -= total;
+            if (offset < -total / 2) offset += total;
+            return offset;
         }
 
-        menuToggle.addEventListener('click', () => {
-            const isOpen = mobileNav.classList.toggle('open');
-            menuToggle.classList.toggle('active', isOpen);
-            menuToggle.setAttribute('aria-expanded', String(isOpen));
-            menuToggle.setAttribute(
-                'aria-label',
-                isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'
-            );
-        });
+        function renderPhotoGallery(animate = true) {
+            const total = photoCards.length;
+            const spread = Math.min(photoStage.clientWidth * 0.33, 330);
 
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', closeMobileMenu);
-        });
+            photoCards.forEach((card, index) => {
+                const offset = wrapOffset(index, currentPhoto, total);
+                const distance = Math.abs(offset);
+                const direction = Math.sign(offset);
 
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 900) {
-                closeMobileMenu();
-            }
-        });
+                let translateX = offset * spread;
+                let translateZ = -distance * 125;
+                let rotateY = direction * -32;
+                let rotateZ = direction * 2.2;
+                let scale = 1 - Math.min(distance * 0.08, 0.28);
+                let opacity = 1 - Math.min(distance * 0.18, 0.72);
+                let blur = Math.min(distance * 0.65, 2.8);
+                let zIndex = 20 - Math.round(distance);
 
-        // Dark Mode Default (Sync with localStorage)
-        const themeToggle = document.getElementById('themeToggle');
-        const savedTheme = localStorage.getItem('portfolio-theme');
-
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-mode');
-        }
-
-        function updateThemeButton() {
-            const isLight = document.body.classList.contains('light-mode');
-            themeToggle.setAttribute('aria-label', isLight ? 'Aktifkan dark mode' : 'Aktifkan light mode');
-            themeToggle.setAttribute('title', isLight ? 'Dark Mode' : 'Light Mode');
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const isLight = document.body.classList.toggle('light-mode');
-            localStorage.setItem('portfolio-theme', isLight ? 'light' : 'dark');
-            updateThemeButton();
-        });
-
-        updateThemeButton();
-
-        // 3D Photography Gallery
-        const photoGallery = document.getElementById('photo3dGallery');
-        const photoStage = document.getElementById('photo3dStage');
-        const photoCards = Array.from(document.querySelectorAll('.photo-3d-card'));
-        const photoPrev = document.getElementById('photoPrev');
-        const photoNext = document.getElementById('photoNext');
-        const photoCounter = document.getElementById('photoCounter');
-
-        if (photoGallery && photoStage && photoCards.length) {
-            let currentPhoto = 0;
-            let dragStartX = 0;
-            let dragDeltaX = 0;
-            let isDragging = false;
-
-            function wrapOffset(index, current, total) {
-                let offset = index - current;
-                if (offset > total / 2) offset -= total;
-                if (offset < -total / 2) offset += total;
-                return offset;
-            }
-
-            function renderPhotoGallery(animate = true) {
-                const total = photoCards.length;
-                const spread = Math.min(photoStage.clientWidth * 0.32, 280);
-
-                photoCards.forEach((card, index) => {
-                    const offset = wrapOffset(index, currentPhoto, total);
-                    const distance = Math.abs(offset);
-                    const direction = Math.sign(offset);
-
-                    let translateX = offset * spread;
-                    let translateZ = -distance * 110;
-                    let rotateY = direction * -30;
-                    let rotateZ = direction * 2;
-                    let scale = 1 - Math.min(distance * 0.08, 0.25);
-                    let opacity = 1 - Math.min(distance * 0.18, 0.7);
-                    let blur = Math.min(distance * 0.6, 2.5);
-                    let zIndex = 20 - Math.round(distance);
-
-                    if (distance === 0) {
-                        translateZ = 50;
-                        rotateY = 0;
-                        rotateZ = 0;
-                        scale = 1.06;
-                        opacity = 1;
-                        blur = 0;
-                        zIndex = 50;
-                        card.classList.add('is-active');
-                    } else {
-                        card.classList.remove('is-active');
-                    }
-
-                    if (distance > 4) {
-                        opacity = 0;
-                        zIndex = 0;
-                    }
-
-                    card.style.transitionDuration = animate ? '550ms' : '0ms';
-                    card.style.transform = `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
-                    card.style.opacity = opacity;
-                    card.style.filter = `blur(${blur}px)`;
-                    card.style.zIndex = zIndex;
-                });
-
-                photoCounter.textContent = `${String(currentPhoto + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
-            }
-
-            function goToPhoto(index) {
-                const total = photoCards.length;
-                currentPhoto = (index + total) % total;
-                renderPhotoGallery(true);
-            }
-
-            photoPrev.addEventListener('click', () => goToPhoto(currentPhoto - 1));
-            photoNext.addEventListener('click', () => goToPhoto(currentPhoto + 1));
-
-            photoGallery.addEventListener('wheel', (event) => {
-                event.preventDefault();
-                if (Math.abs(event.deltaY) < 2 && Math.abs(event.deltaX) < 2) return;
-                goToPhoto(currentPhoto + (event.deltaY + event.deltaX > 0 ? 1 : -1));
-            }, { passive: false });
-
-            photoGallery.addEventListener('pointerdown', (event) => {
-                isDragging = true;
-                dragStartX = event.clientX;
-                dragDeltaX = 0;
-                photoGallery.setPointerCapture(event.pointerId);
-            });
-
-            photoGallery.addEventListener('pointermove', (event) => {
-                if (!isDragging) return;
-                dragDeltaX = event.clientX - dragStartX;
-            });
-
-            photoGallery.addEventListener('pointerup', (event) => {
-                if (!isDragging) return;
-                isDragging = false;
-                try { photoGallery.releasePointerCapture(event.pointerId); } catch (_) {}
-
-                if (Math.abs(dragDeltaX) > 50) {
-                    goToPhoto(currentPhoto + (dragDeltaX < 0 ? 1 : -1));
+                if (distance === 0) {
+                    translateZ = 60;
+                    rotateY = 0;
+                    rotateZ = 0;
+                    scale = 1.08;
+                    opacity = 1;
+                    blur = 0;
+                    zIndex = 50;
+                    card.classList.add('is-active');
+                } else {
+                    card.classList.remove('is-active');
                 }
-                dragDeltaX = 0;
+
+                if (distance > 4) {
+                    opacity = 0;
+                    zIndex = 0;
+                }
+
+                card.style.transitionDuration = animate ? '550ms' : '0ms';
+                card.style.transform = `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+                card.style.opacity = opacity;
+                card.style.filter = `blur(${blur}px)`;
+                card.style.zIndex = zIndex;
             });
 
-            photoGallery.addEventListener('pointercancel', () => {
-                isDragging = false;
-                dragDeltaX = 0;
-            });
-
-            window.addEventListener('resize', () => renderPhotoGallery(false));
-
-            renderPhotoGallery(false);
+            photoCounter.textContent = `${String(currentPhoto + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
         }
+
+        function goToPhoto(index) {
+            const total = photoCards.length;
+            currentPhoto = (index + total) % total;
+            renderPhotoGallery(true);
+        }
+
+        // Mencegah interaksi drag saat tombol navigasi diklik
+        const controlsContainer = document.querySelector('.photo-3d-controls');
+        if (controlsContainer) {
+            controlsContainer.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        if (photoPrev) {
+            photoPrev.addEventListener('click', (e) => {
+                e.stopPropagation();
+                goToPhoto(currentPhoto - 1);
+            });
+        }
+
+        if (photoNext) {
+            photoNext.addEventListener('click', (e) => {
+                e.stopPropagation();
+                goToPhoto(currentPhoto + 1);
+            });
+        }
+
+        photoGallery.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            if (Math.abs(event.deltaY) < 2 && Math.abs(event.deltaX) < 2) return;
+            goToPhoto(currentPhoto + (event.deltaY + event.deltaX > 0 ? 1 : -1));
+        }, { passive: false });
+
+        photoGallery.addEventListener('pointerdown', (event) => {
+            if (event.target.closest('.photo-3d-controls')) return;
+
+            isDragging = true;
+            dragStartX = event.clientX;
+            dragDeltaX = 0;
+            photoGallery.setPointerCapture(event.pointerId);
+        });
+
+        photoGallery.addEventListener('pointermove', (event) => {
+            if (!isDragging) return;
+            dragDeltaX = event.clientX - dragStartX;
+        });
+
+        photoGallery.addEventListener('pointerup', (event) => {
+            if (!isDragging) return;
+            isDragging = false;
+            try {
+                photoGallery.releasePointerCapture(event.pointerId);
+            } catch (_) {}
+
+            if (Math.abs(dragDeltaX) > 55) {
+                goToPhoto(currentPhoto + (dragDeltaX < 0 ? 1 : -1));
+            }
+
+            dragDeltaX = 0;
+        });
+
+        photoGallery.addEventListener('pointercancel', () => {
+            isDragging = false;
+            dragDeltaX = 0;
+        });
+
+        window.addEventListener('resize', () => renderPhotoGallery(false));
+
+        renderPhotoGallery(false);
+    }
     </script>
 </body>
 </html>
